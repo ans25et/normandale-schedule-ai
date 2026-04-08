@@ -1,0 +1,27 @@
+{
+  "name": "normandale-schedule-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "next": "15.2.0",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "4.8.69",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.10",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4",
+    "prisma": "6.5.0",
+    "typescript": "5.8.2",
+    "vitest": "3.1.1"
+  }
+}

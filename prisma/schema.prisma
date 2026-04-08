@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UploadDocument {
+  id          String   @id @default(cuid())
+  kind        String
+  fileName    String
+  parserName  String
+  parserVer   String
+  rawText     String?
+  payload     Json
+  createdAt   DateTime @default(now())
+  planInputs  GeneratedPlan[] @relation("PlanTranscript")
+  planPathway GeneratedPlan[] @relation("PlanPathway")
+}
+
+model GeneratedPlan {
+  id              String   @id @default(cuid())
+  programId       String
+  termLabel       String
+  transcriptId    String
+  pathwayId       String?
+  courseSearchIds Json
+  constraints     Json
+  payload         Json
+  createdAt       DateTime @default(now())
+  transcript      UploadDocument @relation("PlanTranscript", fields: [transcriptId], references: [id])
+  pathway         UploadDocument? @relation("PlanPathway", fields: [pathwayId], references: [id])
+}
