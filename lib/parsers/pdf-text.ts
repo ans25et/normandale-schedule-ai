@@ -1,8 +1,6 @@
-import path from "node:path";
-
 const runtimeRequire = eval("require") as NodeRequire;
 
-const { PDFParse } = runtimeRequire(path.resolve(process.cwd(), "node_modules/pdf-parse/dist/pdf-parse/cjs/index.cjs")) as {
+const { PDFParse } = runtimeRequire("pdf-parse") as {
   PDFParse: new (options: { data: ArrayBuffer }) => {
     getText: () => Promise<{ text?: string }>;
     destroy: () => Promise<void>;
