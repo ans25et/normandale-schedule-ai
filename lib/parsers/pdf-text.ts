@@ -1,4 +1,11 @@
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+
+pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
+  path.join(process.cwd(), "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs")
+).toString();
 
 export interface ExtractedPdfText {
   text: string;
