@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getBuiltInFallCatalogOfferings } from "@/lib/catalog/fall-catalog";
 import { generateSchedulePlan } from "@/lib/planner/scheduler";
 import { getRepository } from "@/lib/storage/memory-repository";
-import type { CourseSearchParseResult, PathwayParseResult, PlanInput, TranscriptParseResult } from "@/lib/types";
+import type { CourseOffering, CourseSearchParseResult, PathwayParseResult, PlanInput, TranscriptParseResult } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -33,7 +33,11 @@ export async function POST(request: Request) {
     );
     const builtInOfferings = input.useBuiltInFallCatalog ? await getBuiltInFallCatalogOfferings() : [];
     const inlineOfferings = (input.courseSearchPayloads ?? []).flatMap((payload) => payload.offerings);
-    const mergedOfferings = [...builtInOfferings, ...availableUploads.flatMap((upload) => upload.payload.offerings), ...inlineOfferings];
+    const mergedOfferings = dedupeOfferings([
+      ...builtInOfferings,
+      ...availableUploads.flatMap((upload) => upload.payload.offerings),
+      ...inlineOfferings
+    ]);
 
     const plan = generateSchedulePlan({
       programId: input.programId,
@@ -76,4 +80,30 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Schedule generation failed.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+function dedupeOfferings(offerings: CourseOffering[]): CourseOffering[] {
+  const seen = new Set<string>();
+  const result: CourseOffering[] = [];
+
+  for (const offering of offerings) {
+    const key = [
+      offering.classNumber ?? "",
+      offering.subject,
+      offering.courseNumber,
+      offering.section,
+      offering.meetingText,
+      offering.instructor ?? "",
+      offering.modality ?? ""
+    ].join("|");
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(offering);
+  }
+
+  return result;
 }
