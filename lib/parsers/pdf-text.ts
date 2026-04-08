@@ -1,11 +1,4 @@
-const runtimeRequire = eval("require") as NodeRequire;
-
-const { PDFParse } = runtimeRequire("pdf-parse") as {
-  PDFParse: new (options: { data: ArrayBuffer }) => {
-    getText: () => Promise<{ text?: string }>;
-    destroy: () => Promise<void>;
-  };
-};
+import { PDFParse } from "pdf-parse";
 
 export interface ExtractedPdfText {
   text: string;
