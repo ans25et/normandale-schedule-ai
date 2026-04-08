@@ -13,17 +13,26 @@ export async function POST(request: Request) {
     }
 
     const payload = await parseTranscriptPdf(await file.arrayBuffer());
-    const record = await getRepository().saveUpload({
-      kind: "transcript",
-      fileName: file.name,
-      parserName: "Normandale Transcript Parser",
-      parserVersion: payload.parserVersion,
-      rawText: payload.rawTextPreview.join("\n"),
-      payload
-    });
+    let documentId: string | undefined;
+    let persistenceWarning: string | undefined;
+
+    try {
+      const record = await getRepository().saveUpload({
+        kind: "transcript",
+        fileName: file.name,
+        parserName: "Normandale Transcript Parser",
+        parserVersion: payload.parserVersion,
+        rawText: payload.rawTextPreview.join("\n"),
+        payload
+      });
+      documentId = record.id;
+    } catch {
+      persistenceWarning = "Transcript parsed, but this hosted environment could not save a local upload record.";
+    }
 
     return NextResponse.json({
-      documentId: record.id,
+      documentId,
+      persistenceWarning,
       payload
     });
   } catch (error) {

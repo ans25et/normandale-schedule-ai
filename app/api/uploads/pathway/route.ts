@@ -13,17 +13,26 @@ export async function POST(request: Request) {
     }
 
     const payload = await parsePathwayPdf(await file.arrayBuffer());
-    const record = await getRepository().saveUpload({
-      kind: "pathway",
-      fileName: file.name,
-      parserName: "Normandale Program Document Parser",
-      parserVersion: payload.parserVersion,
-      rawText: payload.rawTextPreview.join("\n"),
-      payload
-    });
+    let documentId: string | undefined;
+    let persistenceWarning: string | undefined;
+
+    try {
+      const record = await getRepository().saveUpload({
+        kind: "pathway",
+        fileName: file.name,
+        parserName: "Normandale Program Document Parser",
+        parserVersion: payload.parserVersion,
+        rawText: payload.rawTextPreview.join("\n"),
+        payload
+      });
+      documentId = record.id;
+    } catch {
+      persistenceWarning = "Pathway parsed, but this hosted environment could not save a local upload record.";
+    }
 
     return NextResponse.json({
-      documentId: record.id,
+      documentId,
+      persistenceWarning,
       payload
     });
   } catch (error) {

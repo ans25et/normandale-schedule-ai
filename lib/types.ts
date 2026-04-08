@@ -188,9 +188,12 @@ export interface StoredUpload<T> {
 export interface PlanInput {
   programId: string;
   termLabel: string;
-  transcriptDocumentId: string;
+  transcriptDocumentId?: string;
+  transcriptPayload?: TranscriptParseResult;
   pathwayDocumentId?: string;
+  pathwayPayload?: PathwayParseResult;
   courseSearchDocumentIds: string[];
+  courseSearchPayloads?: CourseSearchParseResult[];
   constraints: StudentConstraints;
   selectedMajor?: string;
   useBuiltInFallCatalog?: boolean;

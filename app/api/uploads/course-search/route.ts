@@ -13,17 +13,26 @@ export async function POST(request: Request) {
     }
 
     const payload = await parseCourseSearchPdf(await file.arrayBuffer());
-    const record = await getRepository().saveUpload({
-      kind: "course-search",
-      fileName: file.name,
-      parserName: "Normandale Course Search Parser",
-      parserVersion: payload.parserVersion,
-      rawText: payload.rawTextPreview.join("\n"),
-      payload
-    });
+    let documentId: string | undefined;
+    let persistenceWarning: string | undefined;
+
+    try {
+      const record = await getRepository().saveUpload({
+        kind: "course-search",
+        fileName: file.name,
+        parserName: "Normandale Course Search Parser",
+        parserVersion: payload.parserVersion,
+        rawText: payload.rawTextPreview.join("\n"),
+        payload
+      });
+      documentId = record.id;
+    } catch {
+      persistenceWarning = "Course search PDF parsed, but this hosted environment could not save a local upload record.";
+    }
 
     return NextResponse.json({
-      documentId: record.id,
+      documentId,
+      persistenceWarning,
       payload
     });
   } catch (error) {

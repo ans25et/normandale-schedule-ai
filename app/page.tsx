@@ -3,7 +3,14 @@
 import { useMemo, useState } from "react";
 
 import { NORMANDALE_PROGRAMS } from "@/lib/catalog/programs";
-import type { PlanResult, StudentConstraintBlock, StudentConstraints, TranscriptParseResult } from "@/lib/types";
+import type {
+  CourseSearchParseResult,
+  PathwayParseResult,
+  PlanResult,
+  StudentConstraintBlock,
+  StudentConstraints,
+  TranscriptParseResult
+} from "@/lib/types";
 
 const interestOptions = [
   { id: "arts-humanities", label: "Arts, Communication & Humanities" },
@@ -29,9 +36,11 @@ export default function HomePage() {
   const [transcriptDocumentId, setTranscriptDocumentId] = useState<string>();
   const [transcriptPreview, setTranscriptPreview] = useState<TranscriptParseResult>();
   const [pathwayDocumentId, setPathwayDocumentId] = useState<string>();
+  const [pathwayPreview, setPathwayPreview] = useState<PathwayParseResult>();
   const [selectedMajor, setSelectedMajor] = useState("");
   const [useBuiltInFallCatalog, setUseBuiltInFallCatalog] = useState(true);
   const [courseSearchDocumentIds, setCourseSearchDocumentIds] = useState<string[]>([]);
+  const [courseSearchPayloads, setCourseSearchPayloads] = useState<CourseSearchParseResult[]>([]);
   const [plan, setPlan] = useState<PlanResult>();
   const [status, setStatus] = useState<string>();
   const [error, setError] = useState<string>();
@@ -50,7 +59,7 @@ export default function HomePage() {
   async function uploadSingleFile<T>(
     endpoint: string,
     file: File,
-    onSuccess: (documentId: string, payload: T) => void
+    onSuccess: (documentId: string | undefined, payload: T) => void
   ): Promise<void> {
     setError(undefined);
     setStatus(`Uploading ${file.name}...`);
@@ -87,8 +96,11 @@ export default function HomePage() {
           programId,
           termLabel,
           transcriptDocumentId,
+          transcriptPayload: transcriptPreview,
           pathwayDocumentId,
+          pathwayPayload: pathwayPreview,
           courseSearchDocumentIds,
+          courseSearchPayloads,
           constraints,
           selectedMajor,
           useBuiltInFallCatalog
@@ -197,7 +209,9 @@ export default function HomePage() {
                       if (!file) return;
                       try {
                         await uploadSingleFile<TranscriptParseResult>("/api/uploads/transcript", file, (documentId, payload) => {
-                          setTranscriptDocumentId(documentId);
+                          if (documentId) {
+                            setTranscriptDocumentId(documentId);
+                          }
                           setTranscriptPreview(payload);
                           if (!selectedMajor && payload.majors.length > 0) {
                             setSelectedMajor(payload.majors[0]);
@@ -245,8 +259,11 @@ export default function HomePage() {
                       const file = event.target.files?.[0];
                       if (!file) return;
                       try {
-                        await uploadSingleFile("/api/uploads/pathway", file, (documentId) => {
-                          setPathwayDocumentId(documentId);
+                        await uploadSingleFile<PathwayParseResult>("/api/uploads/pathway", file, (documentId, payload) => {
+                          if (documentId) {
+                            setPathwayDocumentId(documentId);
+                          }
+                          setPathwayPreview(payload);
                         });
                       } catch (caught) {
                         setError(caught instanceof Error ? caught.message : "Pathway upload failed.");
@@ -294,8 +311,11 @@ export default function HomePage() {
 
                         try {
                           for (const file of files) {
-                            await uploadSingleFile("/api/uploads/course-search", file, (documentId) => {
-                              setCourseSearchDocumentIds((current) => [...current, documentId]);
+                            await uploadSingleFile<CourseSearchParseResult>("/api/uploads/course-search", file, (documentId, payload) => {
+                              if (documentId) {
+                                setCourseSearchDocumentIds((current) => [...current, documentId]);
+                              }
+                              setCourseSearchPayloads((current) => [...current, payload]);
                             });
                           }
                         } catch (caught) {
@@ -410,12 +430,7 @@ export default function HomePage() {
                   <button className="secondary-btn" type="button" onClick={addUnavailableBlock}>
                     Add blocked time
                   </button>
-                  <button
-                    className="primary-btn"
-                    type="button"
-                    onClick={handleGeneratePlan}
-                    disabled={!transcriptDocumentId || isGenerating}
-                  >
+                  <button className="primary-btn" type="button" onClick={handleGeneratePlan} disabled={!transcriptPreview || isGenerating}>
                     {isGenerating ? "Building..." : "Show schedules"}
                   </button>
                 </div>

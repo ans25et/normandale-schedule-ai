@@ -10,40 +10,45 @@ export async function POST(request: Request) {
     const input = (await request.json()) as PlanInput;
     const repository = getRepository();
 
-    const transcript = await repository.getUpload<TranscriptParseResult>(input.transcriptDocumentId);
-    if (!transcript) {
+    const transcriptRecord = input.transcriptDocumentId
+      ? await repository.getUpload<TranscriptParseResult>(input.transcriptDocumentId)
+      : undefined;
+    const transcriptPayload = transcriptRecord?.payload ?? input.transcriptPayload;
+    if (!transcriptPayload) {
       return NextResponse.json({ error: "Transcript upload was not found for this session." }, { status: 404 });
     }
 
-    const pathway = input.pathwayDocumentId
+    const pathwayRecord = input.pathwayDocumentId
       ? await repository.getUpload<PathwayParseResult>(input.pathwayDocumentId)
       : undefined;
+    const pathwayPayload = pathwayRecord?.payload ?? input.pathwayPayload;
 
     const courseSearchUploads = await Promise.all(
-      input.courseSearchDocumentIds.map((documentId) => repository.getUpload<CourseSearchParseResult>(documentId))
+      (input.courseSearchDocumentIds ?? []).map((documentId) => repository.getUpload<CourseSearchParseResult>(documentId))
     );
     const availableUploads = courseSearchUploads.filter(
       (upload): upload is NonNullable<typeof upload> => Boolean(upload)
     );
     const builtInOfferings = input.useBuiltInFallCatalog ? await getBuiltInFallCatalogOfferings() : [];
-    const mergedOfferings = [...builtInOfferings, ...availableUploads.flatMap((upload) => upload.payload.offerings)];
+    const inlineOfferings = (input.courseSearchPayloads ?? []).flatMap((payload) => payload.offerings);
+    const mergedOfferings = [...builtInOfferings, ...availableUploads.flatMap((upload) => upload.payload.offerings), ...inlineOfferings];
 
     const plan = generateSchedulePlan({
       programId: input.programId,
       termLabel: input.termLabel,
-      transcript: transcript.payload,
+      transcript: transcriptPayload,
       offerings: mergedOfferings,
       constraints: input.constraints,
       selectedMajor: input.selectedMajor,
       parserWarnings: [
-        ...(input.programId === "normandale-cs-transfer-pathway-v1" && !pathway
+        ...(input.programId === "normandale-cs-transfer-pathway-v1" && !pathwayPayload
           ? ["No pathway PDF was uploaded, so the built-in CS Transfer Pathway rules were used."]
           : []),
-        ...(pathway?.payload.recognized
+        ...(pathwayPayload?.recognized
           ? [
-              `Using "${pathway.payload.title ?? "your program PDF"}" as an extra Normandale reference document.`,
-              ...(pathway.payload.extractedRequirements.length > 0
-                ? [`Parsed ${pathway.payload.extractedRequirements.length} planning requirement${pathway.payload.extractedRequirements.length === 1 ? "" : "s"} from that document.`]
+              `Using "${pathwayPayload.title ?? "your program PDF"}" as an extra Normandale reference document.`,
+              ...(pathwayPayload.extractedRequirements.length > 0
+                ? [`Parsed ${pathwayPayload.extractedRequirements.length} planning requirement${pathwayPayload.extractedRequirements.length === 1 ? "" : "s"} from that document.`]
                 : [])
             ]
           : []),
@@ -59,7 +64,11 @@ export async function POST(request: Request) {
       ]
     });
 
-    await repository.savePlan(input, plan);
+    try {
+      await repository.savePlan(input, plan);
+    } catch {
+      // Ignore non-persistent environments in v1 hosted mode.
+    }
     return NextResponse.json(plan);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Schedule generation failed.";
