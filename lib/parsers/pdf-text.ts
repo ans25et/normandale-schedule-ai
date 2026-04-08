@@ -1,11 +1,15 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.mjs";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
-  path.join(process.cwd(), "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs")
-).toString();
+const pdfjsGlobal = globalThis as typeof globalThis & {
+  pdfjsWorker?: {
+    WorkerMessageHandler: unknown;
+  };
+};
+
+pdfjsGlobal.pdfjsWorker = {
+  WorkerMessageHandler
+};
 
 export interface ExtractedPdfText {
   text: string;
