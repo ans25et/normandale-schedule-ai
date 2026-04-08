@@ -4,7 +4,7 @@ import { promises as fs } from "node:fs";
 import { parseCourseSearchPdf } from "@/lib/parsers/course-search";
 import type { CourseOffering } from "@/lib/types";
 
-const CACHE_FILE = path.join(process.cwd(), ".data", "fall-2026-catalog.json");
+const CACHE_FILE = path.join(getDataDir(), "fall-2026-catalog.json");
 const FIXTURE_FILE = path.join(process.cwd(), "fixtures", "fall-2026-catalog.json");
 
 export async function getBuiltInFallCatalogOfferings(): Promise<CourseOffering[]> {
@@ -62,4 +62,16 @@ async function readCatalogJson(filePath: string): Promise<CourseOffering[] | und
     }
     throw error;
   }
+}
+
+function getDataDir(): string {
+  if (process.env.DATA_DIR) {
+    return process.env.DATA_DIR;
+  }
+
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join("/tmp", "normandale-schedule-ai");
+  }
+
+  return path.join(process.cwd(), ".data");
 }

@@ -4,7 +4,7 @@ import { promises as fs } from "node:fs";
 import type { PlanInput, PlanResult, StoredUpload } from "@/lib/types";
 import type { Repository } from "@/lib/storage/repository";
 
-const DATA_DIR = path.join(process.cwd(), ".data");
+const DATA_DIR = getDataDir();
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const PLANS_DIR = path.join(DATA_DIR, "plans");
 
@@ -62,4 +62,16 @@ const repository = new FileBackedRepository();
 
 export function getRepository(): Repository {
   return repository;
+}
+
+function getDataDir(): string {
+  if (process.env.DATA_DIR) {
+    return process.env.DATA_DIR;
+  }
+
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join("/tmp", "normandale-schedule-ai");
+  }
+
+  return path.join(process.cwd(), ".data");
 }
