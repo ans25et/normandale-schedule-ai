@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { parsePathwayPdf } from "@/lib/parsers/pathway";
 import { getRepository } from "@/lib/storage/memory-repository";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();

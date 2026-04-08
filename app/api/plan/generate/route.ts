@@ -5,6 +5,8 @@ import { generateSchedulePlan } from "@/lib/planner/scheduler";
 import { getRepository } from "@/lib/storage/memory-repository";
 import type { CourseSearchParseResult, PathwayParseResult, PlanInput, TranscriptParseResult } from "@/lib/types";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
     const input = (await request.json()) as PlanInput;

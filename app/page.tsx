@@ -72,9 +72,21 @@ export default function HomePage() {
       body: formData
     });
 
-    const data = await response.json();
+    const raw = await response.text();
+    let data: { documentId?: string; payload?: T; error?: string };
+
+    try {
+      data = JSON.parse(raw) as { documentId?: string; payload?: T; error?: string };
+    } catch {
+      throw new Error(raw || "Upload failed.");
+    }
+
     if (!response.ok) {
       throw new Error(data.error ?? "Upload failed.");
+    }
+
+    if (data.payload === undefined) {
+      throw new Error("Upload returned no parsed data.");
     }
 
     onSuccess(data.documentId, data.payload);
@@ -107,7 +119,15 @@ export default function HomePage() {
         })
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: any;
+
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(raw || "Plan generation failed.");
+      }
+
       if (!response.ok) {
         throw new Error(data.error ?? "Plan generation failed.");
       }

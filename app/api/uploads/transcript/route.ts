@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { parseTranscriptPdf } from "@/lib/parsers/transcript";
 import { getRepository } from "@/lib/storage/memory-repository";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
