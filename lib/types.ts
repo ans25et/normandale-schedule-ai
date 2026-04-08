@@ -82,6 +82,7 @@ export interface ProgramRequirement {
   type: "course" | "choice";
   eligibleCourses: string[];
   credits: number;
+  minimumCourses?: number;
   minGrade?: string;
   prerequisiteCourses?: string[];
   notes?: string;

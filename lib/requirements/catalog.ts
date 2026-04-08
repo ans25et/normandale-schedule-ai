@@ -1,4 +1,9 @@
-import type { ProgramCatalog } from "@/lib/types";
+import { findNormandaleProgram } from "@/lib/catalog/program-details";
+import type { ProgramCatalog, ProgramRequirement } from "@/lib/types";
+
+type CatalogSection = NonNullable<
+  NonNullable<NonNullable<ReturnType<typeof findNormandaleProgram>>["catalogPage"]>["sections"]
+>[number];
 
 export const GENERAL_NORMANDALE_PROGRAM: ProgramCatalog = {
   id: "normandale-general-v1",
@@ -132,4 +137,134 @@ const catalogById: Record<string, ProgramCatalog> = {
 
 export function getProgramCatalog(programId: string): ProgramCatalog {
   return catalogById[programId] ?? GENERAL_NORMANDALE_PROGRAM;
+}
+
+export function resolveProgramCatalog(programId: string, selectedMajor?: string): ProgramCatalog {
+  if (programId !== GENERAL_NORMANDALE_PROGRAM.id) {
+    return getProgramCatalog(programId);
+  }
+
+  const normalizedMajor = selectedMajor?.trim().toUpperCase() ?? "";
+  if (normalizedMajor.includes("COMPUTER SCIENCE")) {
+    return CS_TRANSFER_PATHWAY_PROGRAM;
+  }
+
+  const programFromCatalog = selectedMajor ? buildProgramCatalogFromNormandaleData(selectedMajor) : undefined;
+  if (programFromCatalog) {
+    return programFromCatalog;
+  }
+
+  return GENERAL_NORMANDALE_PROGRAM;
+}
+
+function buildProgramCatalogFromNormandaleData(selectedMajor: string): ProgramCatalog | undefined {
+  const record = findNormandaleProgram(selectedMajor);
+  const catalogPage = record?.catalogPage;
+  if (!record || !catalogPage?.sections?.length) {
+    return undefined;
+  }
+
+  const requirements = catalogPage.sections.flatMap((section, sectionIndex) =>
+    buildRequirementsFromSection(section, sectionIndex)
+  );
+
+  if (requirements.length === 0) {
+    return undefined;
+  }
+
+  const label = catalogPage.title ?? record.publicPage.heading ?? record.title;
+  return {
+    id: `normandale-dynamic-${slugify(label)}`,
+    label,
+    description: record.publicPage.metaDescription || `Official Normandale catalog-backed planning profile for ${label}.`,
+    requirementSetVersion: `2026.04-dynamic-${slugify(label)}`,
+    requirements
+  };
+}
+
+function buildRequirementsFromSection(
+  section: CatalogSection,
+  sectionIndex: number
+): ProgramRequirement[] {
+  if (!section.courses.length) {
+    return [];
+  }
+
+  const lowerHeading = section.heading.toLowerCase();
+  const minimumCourses = extractMinimumCourseCount(lowerHeading);
+  const importance = deriveSectionImportance(lowerHeading, section.level);
+  const credits = sumCredits(section.courses.map((course) => course.credits));
+  const note = section.narrative.join(" ").trim() || undefined;
+
+  if (minimumCourses !== undefined) {
+    return [
+      {
+        id: `section-${sectionIndex}-${slugify(section.heading)}`,
+        label: section.heading,
+        type: "choice",
+        eligibleCourses: section.courses.map((course) => course.code),
+        credits,
+        minimumCourses,
+        minGrade: "C",
+        notes: note,
+        importance
+      }
+    ];
+  }
+
+  return section.courses.map((course, courseIndex) => ({
+    id: `section-${sectionIndex}-course-${courseIndex}-${slugify(course.code)}`,
+    label: course.title,
+    type: "course" as const,
+    eligibleCourses: [course.code],
+    credits: parseCredits(course.credits) ?? credits,
+    minGrade: "C",
+    notes: note,
+    importance
+  }));
+}
+
+function extractMinimumCourseCount(lowerHeading: string): number | undefined {
+  if (/\b(one|1)\b/.test(lowerHeading) && /\b(complete|choose|select)\b/.test(lowerHeading)) {
+    return 1;
+  }
+  if (/\b(two|2)\b/.test(lowerHeading) && /\b(complete|choose|select)\b/.test(lowerHeading)) {
+    return 2;
+  }
+  if (/\b(three|3)\b/.test(lowerHeading) && /\b(complete|choose|select)\b/.test(lowerHeading)) {
+    return 3;
+  }
+  return undefined;
+}
+
+function deriveSectionImportance(
+  lowerHeading: string,
+  level: number
+): ProgramRequirement["importance"] {
+  if (lowerHeading.includes("core") || lowerHeading.includes("required")) {
+    return "critical";
+  }
+  if (level <= 3) {
+    return "core";
+  }
+  return "supporting";
+}
+
+function sumCredits(creditLabels: string[]): number {
+  return creditLabels.reduce((sum, label) => sum + (parseCredits(label) ?? 0), 0);
+}
+
+function parseCredits(value: string): number | undefined {
+  const match = value.match(/(\d+(?:\.\d+)?)/);
+  if (!match) {
+    return undefined;
+  }
+  return Number(match[1]);
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }

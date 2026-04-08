@@ -17,9 +17,12 @@ export function evaluateProgramRequirements(
   }
 
   return program.requirements.map((requirement) => {
-    const matchedAttempt = requirement.eligibleCourses
+    const matchedAttempts = requirement.eligibleCourses
       .map((code) => bestAttemptByCourse.get(code))
-      .find((attempt) => attempt && gradeMeetsMinimum(attempt.grade, requirement.minGrade));
+      .filter((attempt): attempt is NonNullable<typeof attempt> => Boolean(attempt))
+      .filter((attempt) => gradeMeetsMinimum(attempt.grade, requirement.minGrade));
+    const minimumCourses = requirement.minimumCourses ?? 1;
+    const matchedAttempt = matchedAttempts[0];
 
     const missingPrerequisites = (requirement.prerequisiteCourses ?? []).filter((courseCode) => {
       const attempt = bestAttemptByCourse.get(courseCode);
@@ -30,7 +33,7 @@ export function evaluateProgramRequirements(
 
     return {
       requirement,
-      satisfied: Boolean(matchedAttempt),
+      satisfied: matchedAttempts.length >= minimumCourses,
       matchedCourseCode: matchedAttempt ? `${matchedAttempt.subject} ${matchedAttempt.courseNumber}` : undefined,
       missingPrerequisites,
       hasOfferingInTerm
