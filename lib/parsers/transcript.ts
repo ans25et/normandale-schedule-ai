@@ -12,13 +12,24 @@ export async function parseTranscriptPdf(buffer: ArrayBuffer): Promise<Transcrip
 }
 
 export function parseTranscriptText(text: string, rawLines?: string[]): TranscriptParseResult {
-  if (!text.includes("Normandale Community College") || !text.includes("Undergraduate Academic Record")) {
-    throw new Error("This does not look like a Normandale academic record PDF.");
-  }
-
   const lines = (rawLines ?? text.split("\n"))
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter(Boolean);
+  const normalizedText = lines.join("\n");
+
+  const hasNormandaleHeader =
+    normalizedText.includes("Normandale Community College") ||
+    (lines.includes("Normandale") && lines.includes("Community") && lines.includes("College"));
+  const hasAcademicRecordHeader =
+    normalizedText.includes("Undergraduate Academic Record") ||
+    normalizedText.includes("Academic Record") ||
+    lines.includes("Undergraduate") ||
+    lines.includes("Academic") ||
+    lines.includes("Record");
+
+  if (!hasNormandaleHeader || !hasAcademicRecordHeader) {
+    throw new Error("This does not look like a Normandale academic record PDF.");
+  }
 
   const courses: StudentCourseHistory[] = [];
   const majors = new Set<string>();
