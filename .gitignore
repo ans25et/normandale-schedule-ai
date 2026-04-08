@@ -6,3 +6,5 @@ coverage
 dist
 *.log
 .data
+
+.DS_Store
