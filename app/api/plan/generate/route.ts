@@ -39,36 +39,54 @@ export async function POST(request: Request) {
       ...inlineOfferings
     ]);
 
-    const plan = generateSchedulePlan({
+    const parserWarnings = [
+      ...(input.programId === "normandale-cs-transfer-pathway-v1" && !pathwayPayload
+        ? ["No pathway PDF was uploaded, so the built-in CS Transfer Pathway rules were used."]
+        : []),
+      ...(pathwayPayload?.recognized
+        ? [
+            `Using "${pathwayPayload.title ?? "your program PDF"}" as an extra Normandale reference document.`,
+            ...(pathwayPayload.extractedRequirements.length > 0
+              ? [`Parsed ${pathwayPayload.extractedRequirements.length} planning requirement${pathwayPayload.extractedRequirements.length === 1 ? "" : "s"} from that document.`]
+              : [])
+          ]
+        : []),
+      ...(input.useBuiltInFallCatalog
+        ? ["Using the built-in Fall 2026 class list, so subject PDF upload is optional."]
+        : []),
+      ...(input.useBuiltInFallCatalog && builtInOfferings.length === 0
+        ? ["No built-in Fall 2026 catalog was found on this server yet, so upload subject PDFs or seed a catalog file before going live."]
+        : []),
+      ...(!input.useBuiltInFallCatalog && availableUploads.length === 0
+        ? ["No semester subject PDFs were uploaded, so no schedule options could be generated."]
+        : [])
+    ];
+
+    let plan = generateSchedulePlan({
       programId: input.programId,
       termLabel: input.termLabel,
       transcript: transcriptPayload,
       offerings: mergedOfferings,
       constraints: input.constraints,
       selectedMajor: input.selectedMajor,
-      parserWarnings: [
-        ...(input.programId === "normandale-cs-transfer-pathway-v1" && !pathwayPayload
-          ? ["No pathway PDF was uploaded, so the built-in CS Transfer Pathway rules were used."]
-          : []),
-        ...(pathwayPayload?.recognized
-          ? [
-              `Using "${pathwayPayload.title ?? "your program PDF"}" as an extra Normandale reference document.`,
-              ...(pathwayPayload.extractedRequirements.length > 0
-                ? [`Parsed ${pathwayPayload.extractedRequirements.length} planning requirement${pathwayPayload.extractedRequirements.length === 1 ? "" : "s"} from that document.`]
-                : [])
-            ]
-          : []),
-        ...(input.useBuiltInFallCatalog
-          ? ["Using the built-in Fall 2026 class list, so subject PDF upload is optional."]
-          : []),
-        ...(input.useBuiltInFallCatalog && builtInOfferings.length === 0
-          ? ["No built-in Fall 2026 catalog was found on this server yet, so upload subject PDFs or seed a catalog file before going live."]
-          : []),
-        ...(!input.useBuiltInFallCatalog && availableUploads.length === 0
-          ? ["No semester subject PDFs were uploaded, so no schedule options could be generated."]
-          : [])
-      ]
+      parserWarnings
     });
+
+    if (!input.useBuiltInFallCatalog && plan.options.length === 0 && builtInOfferings.length > 0) {
+      const fallbackOfferings = dedupeOfferings([...mergedOfferings, ...builtInOfferings]);
+      plan = generateSchedulePlan({
+        programId: input.programId,
+        termLabel: input.termLabel,
+        transcript: transcriptPayload,
+        offerings: fallbackOfferings,
+        constraints: input.constraints,
+        selectedMajor: input.selectedMajor,
+        parserWarnings: [
+          ...parserWarnings,
+          "Your uploaded PDFs looked incomplete for this major, so the planner also checked the built-in full Fall 2026 catalog."
+        ]
+      });
+    }
 
     try {
       await repository.savePlan(input, plan);
