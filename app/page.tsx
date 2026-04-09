@@ -31,14 +31,15 @@ const defaultConstraints: StudentConstraints = {
 
 export default function HomePage() {
   const [programId] = useState("normandale-general-v1");
-  const [termLabel] = useState("Fall 2026");
+  const [schoolName, setSchoolName] = useState("");
+  const [termLabel, setTermLabel] = useState("Fall 2026");
   const [constraints, setConstraints] = useState<StudentConstraints>(defaultConstraints);
   const [transcriptDocumentId, setTranscriptDocumentId] = useState<string>();
   const [transcriptPreview, setTranscriptPreview] = useState<TranscriptParseResult>();
   const [pathwayDocumentId, setPathwayDocumentId] = useState<string>();
   const [pathwayPreview, setPathwayPreview] = useState<PathwayParseResult>();
   const [selectedMajor, setSelectedMajor] = useState("");
-  const [useBuiltInFallCatalog, setUseBuiltInFallCatalog] = useState(true);
+  const [useBuiltInFallCatalog, setUseBuiltInFallCatalog] = useState(false);
   const [courseSearchDocumentIds, setCourseSearchDocumentIds] = useState<string[]>([]);
   const [courseSearchPayloads, setCourseSearchPayloads] = useState<CourseSearchParseResult[]>([]);
   const [plan, setPlan] = useState<PlanResult>();
@@ -55,6 +56,8 @@ export default function HomePage() {
     }
     return "Choose your current degree";
   }, [selectedMajor, transcriptPreview]);
+
+  const currentSchoolLabel = schoolName.trim() || "Your school";
 
   async function uploadSingleFile<T>(
     endpoint: string,
@@ -192,16 +195,17 @@ export default function HomePage() {
   return (
     <main className="page-shell">
       <section className="hero">
-        <span className="eyebrow">Fall 2026 · Normandale only</span>
-        <h1>Build a schedule that actually fits your life.</h1>
+        <span className="eyebrow">{termLabel} · bring your own files</span>
+        <h1>Build a class schedule that actually fits your life.</h1>
         <p>
-          Upload your transcript, choose your degree, add a few limits, and get solid Fall 2026 schedule options fast. Less
-          guessing. Less stress.
+          Upload your transcript, upload your semester class files, block out work or life stuff, and get cleaner schedule options
+          faster.
         </p>
         <div className="note-strip">
-          <span>All majors</span>
+          <span>Any major</span>
+          <span>Your school files</span>
           <span>ADHD-friendly</span>
-          <span>Fall 2026 built in</span>
+          <span>Work-life aware</span>
         </div>
         <div className="hero-stripe" aria-hidden="true">
           <span />
@@ -214,13 +218,37 @@ export default function HomePage() {
         <section className="panel">
           <div className="panel-inner">
             <h2 className="section-title">Setup</h2>
-            <p className="section-copy">Transcript first. The rest is quick.</p>
+            <p className="section-copy">School, files, blocked time, done.</p>
 
             <div className="step-list">
               <div className="step-card">
-                <h3>1. Transcript</h3>
+                <h3>1. School + term</h3>
+                <div className="mini-grid">
+                  <div className="field">
+                    <label htmlFor="school">School</label>
+                    <input
+                      id="school"
+                      value={schoolName}
+                      onChange={(event) => setSchoolName(event.target.value)}
+                      placeholder="Example: Normandale, UMN, Metro State"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="term">Term</label>
+                    <input
+                      id="term"
+                      value={termLabel}
+                      onChange={(event) => setTermLabel(event.target.value)}
+                      placeholder="Example: Fall 2026"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="step-card">
+                <h3>2. Transcript</h3>
                 <div className="upload-card">
-                  <h4>Academic record PDF</h4>
+                  <h4>Transcript or academic record PDF</h4>
                   <input
                     type="file"
                     accept="application/pdf"
@@ -247,8 +275,8 @@ export default function HomePage() {
               </div>
 
               <div className="step-card">
-                <h3>2. Current degree</h3>
-                <p className="helper-copy">We do not force the major from your transcript. You can change it here.</p>
+                <h3>3. Current degree</h3>
+                <p className="helper-copy">We do not lock you into the degree shown on your transcript. Change it anytime.</p>
                 <div className="field">
                   <label htmlFor="major">Your degree now</label>
                   <input
@@ -262,15 +290,17 @@ export default function HomePage() {
                     {(transcriptPreview?.majors ?? []).map((major) => (
                       <option key={major} value={major} />
                     ))}
-                    {NORMANDALE_PROGRAMS.map((program) => (
+                    {schoolName.trim().toLowerCase().includes("normandale")
+                      ? NORMANDALE_PROGRAMS.map((program) => (
                       <option key={program} value={program} />
-                    ))}
+                        ))
+                      : null}
                   </datalist>
                 </div>
                 <div className="upload-card" style={{ marginTop: "12px" }}>
-                  <h4>Optional pathway or program PDF</h4>
+                  <h4>Optional degree plan or pathway PDF</h4>
                   <p className="helper-copy">
-                    Supports Normandale pathway and planning documents like transfer pathway PDFs and the AA Planning Worksheet.
+                    Upload one if you have it. This helps the planner understand your degree rules better.
                   </p>
                   <input
                     type="file"
@@ -295,32 +325,32 @@ export default function HomePage() {
               </div>
 
               <div className="step-card">
-                <h3>3. Fall classes</h3>
+                <h3>4. Semester classes</h3>
                 <div className="toggle-row">
                   <button
                     type="button"
                     className={useBuiltInFallCatalog ? "primary-btn" : "secondary-btn"}
                     onClick={() => setUseBuiltInFallCatalog(true)}
                   >
-                    Use built-in Fall 2026 classes
+                    Use built-in catalog
                   </button>
                   <button
                     type="button"
                     className={!useBuiltInFallCatalog ? "primary-btn" : "secondary-btn"}
                     onClick={() => setUseBuiltInFallCatalog(false)}
                   >
-                    Upload my own subject PDFs
+                    Upload my own class PDFs
                   </button>
                 </div>
 
                 {useBuiltInFallCatalog ? (
                   <p className="helper-copy">
-                    You do not need to upload semester subject PDFs for this local Fall-only version. The app can use the Fall 2026
-                    class list already loaded from your files.
+                    Best when you are using the built-in Normandale Fall 2026 catalog. For any other school, use your own class PDFs.
                   </p>
                 ) : (
                   <div className="upload-card">
-                    <h4>Semester subject PDFs</h4>
+                    <h4>Semester class-search PDFs</h4>
+                    <p className="helper-copy">Upload however many files you have. Overlapping files are okay.</p>
                     <input
                       type="file"
                       accept="application/pdf"
@@ -349,7 +379,7 @@ export default function HomePage() {
               </div>
 
               <div className="step-card">
-                <h3>4. Limits + preferences</h3>
+                <h3>5. Time limits</h3>
                 <div className="mini-grid">
                   <div className="field">
                     <label htmlFor="credits">Max credits</label>
@@ -362,6 +392,15 @@ export default function HomePage() {
                       onChange={(event) =>
                         setConstraints((current) => ({ ...current, maxCredits: Number(event.target.value) || 0 }))
                       }
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="earliest">Earliest class time</label>
+                    <input
+                      id="earliest"
+                      value={constraints.earliestClassTime ?? ""}
+                      onChange={(event) => setConstraints((current) => ({ ...current, earliestClassTime: event.target.value }))}
+                      placeholder="Optional"
                     />
                   </div>
                   <div className="field">
@@ -392,8 +431,7 @@ export default function HomePage() {
                     })}
                   </div>
                   <p className="helper-copy">
-                    Based on Normandale interest areas. This is mainly used when more than one elective-style option could work and we
-                    need a tie-breaker.
+                    This helps break ties when more than one elective-style schedule could work.
                   </p>
                 </div>
 
@@ -466,36 +504,18 @@ export default function HomePage() {
           <div className="panel-inner">
             <h2 className="section-title">{currentMajorLabel}</h2>
             <p className="section-copy">
-              A quick planning tool for Fall 2026. Good starting point first, advisor check after.
+              {currentSchoolLabel} · {termLabel}. Start here, then sanity-check with an advisor if you have one.
             </p>
 
             <article className="schedule-card" style={{ marginBottom: "16px" }}>
-              <h3 style={{ marginTop: 0 }}>Need official help?</h3>
+              <h3 style={{ marginTop: 0 }}>How this works</h3>
               <p className="muted">
-                Advising, Counseling and Career Center
-                <br />
-                advising@normandale.edu
-                <br />
-                952-358-8261
-                <br />
-                Room C 1115
+                The app reads your transcript and class-list PDFs, filters around your blocked time, and tries to find schedule mixes
+                that look realistic.
               </p>
-              <div className="link-stack">
-                <a className="secondary-btn link-btn" href="https://www.normandale.edu/current-students/advising-counseling-and-career-center/" target="_blank" rel="noreferrer">
-                  Advising center
-                </a>
-                <a className="secondary-btn link-btn" href="https://www.normandale.edu/current-students/advising-counseling-and-career-center/advising-planning/index.html" target="_blank" rel="noreferrer">
-                  Academic advising
-                </a>
-                <a
-                  className="secondary-btn link-btn"
-                  href="https://eservices.minnstate.edu/registration/search/advanced.html?searchrcid=0156&searchcampusid=&setCollege=Set+College%2FUniversity"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Official course schedule
-                </a>
-              </div>
+              <p className="helper-copy" style={{ marginBottom: 0 }}>
+                If your school files are incomplete or messy, the results can be incomplete too.
+              </p>
             </article>
 
             {isGenerating ? (
@@ -522,7 +542,7 @@ export default function HomePage() {
               <div className="empty-state vibe-state">
                 <span className="vibe-badge">Planner preview</span>
                 <h3>No schedule cards yet</h3>
-                <p>Your best-fit options will show up here once you run the planner.</p>
+                <p>Your schedule options will show up here after you upload your files and run the planner.</p>
               </div>
             ) : (
               <div className="schedule-stack">
