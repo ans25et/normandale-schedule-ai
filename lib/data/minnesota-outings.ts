@@ -2,6 +2,8 @@ export type CompanyTag = "solo" | "date" | "friends" | "family";
 export type BudgetTag = "free" | "cheap" | "medium" | "splurge";
 export type VibeTag = "outdoors" | "arts" | "cozy" | "active" | "scenic";
 export type TimeTag = "quick" | "half-day" | "full-day";
+export type SeasonTag = "any" | "rainy" | "winter" | "sunny";
+export type PriceCapTag = "any" | "under-25" | "under-10";
 
 export interface OutingItem {
   id: string;
@@ -14,10 +16,13 @@ export interface OutingItem {
   city: string;
   url: string;
   sourceLabel: string;
+  kidFriendly: boolean;
   companyTags: CompanyTag[];
   budgetTags: BudgetTag[];
   vibeTags: VibeTag[];
   timeTags: TimeTag[];
+  seasonTags: SeasonTag[];
+  priceCaps: PriceCapTag[];
 }
 
 export const COMPANY_OPTIONS: Array<{ id: CompanyTag; label: string }> = [
@@ -48,6 +53,19 @@ export const TIME_OPTIONS: Array<{ id: TimeTag; label: string }> = [
   { id: "full-day", label: "Full day" }
 ];
 
+export const SEASON_OPTIONS: Array<{ id: SeasonTag; label: string }> = [
+  { id: "any", label: "Any weather" },
+  { id: "rainy", label: "Rainy day" },
+  { id: "winter", label: "Winter" },
+  { id: "sunny", label: "Nice out" }
+];
+
+export const PRICE_CAP_OPTIONS: Array<{ id: PriceCapTag; label: string }> = [
+  { id: "any", label: "Any cost" },
+  { id: "under-25", label: "Under $25" },
+  { id: "under-10", label: "Under $10" }
+];
+
 export const MINNESOTA_OUTINGS: OutingItem[] = [
   {
     id: "mia",
@@ -60,10 +78,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Minneapolis",
     url: "https://new.artsmia.org/",
     sourceLabel: "Minneapolis Institute of Art",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["free", "cheap"],
     vibeTags: ["arts", "cozy"],
-    timeTags: ["quick", "half-day"]
+    timeTags: ["quick", "half-day"],
+    seasonTags: ["any", "rainy", "winter"],
+    priceCaps: ["any", "under-25", "under-10"]
   },
   {
     id: "como-zoo",
@@ -76,10 +97,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Saint Paul",
     url: "https://comozooconservatory.org/",
     sourceLabel: "Como Park Zoo & Conservatory",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["free", "cheap"],
     vibeTags: ["outdoors", "cozy", "scenic"],
-    timeTags: ["half-day", "full-day"]
+    timeTags: ["half-day", "full-day"],
+    seasonTags: ["any", "rainy", "winter", "sunny"],
+    priceCaps: ["any", "under-25", "under-10"]
   },
   {
     id: "sculpture-garden",
@@ -92,10 +116,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Minneapolis",
     url: "https://walkerart.org/visit/garden/",
     sourceLabel: "Walker Art Center",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["free", "cheap"],
     vibeTags: ["arts", "scenic", "outdoors"],
-    timeTags: ["quick", "half-day"]
+    timeTags: ["quick", "half-day"],
+    seasonTags: ["any", "sunny"],
+    priceCaps: ["any", "under-25", "under-10"]
   },
   {
     id: "minnehaha",
@@ -108,10 +135,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Minneapolis",
     url: "https://www.minneapolisparks.org/parks-destinations/parks-lakes/minnehaha_regional_park/",
     sourceLabel: "Minneapolis Park & Recreation Board",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["free", "cheap"],
     vibeTags: ["outdoors", "active", "scenic"],
-    timeTags: ["quick", "half-day"]
+    timeTags: ["quick", "half-day"],
+    seasonTags: ["any", "sunny"],
+    priceCaps: ["any", "under-25", "under-10"]
   },
   {
     id: "state-park-day",
@@ -124,10 +154,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Statewide",
     url: "https://www.dnr.state.mn.us/state_parks/permit.html",
     sourceLabel: "Minnesota DNR",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["cheap", "medium"],
     vibeTags: ["outdoors", "active", "scenic"],
-    timeTags: ["half-day", "full-day"]
+    timeTags: ["half-day", "full-day"],
+    seasonTags: ["any", "sunny"],
+    priceCaps: ["any", "under-25", "under-10"]
   },
   {
     id: "mill-city",
@@ -140,10 +173,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Minneapolis",
     url: "https://www.mnhs.org/millcity",
     sourceLabel: "Minnesota Historical Society",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["cheap", "medium"],
     vibeTags: ["arts", "cozy"],
-    timeTags: ["half-day"]
+    timeTags: ["half-day"],
+    seasonTags: ["any", "rainy", "winter"],
+    priceCaps: ["any", "under-25"]
   },
   {
     id: "arboretum",
@@ -156,10 +192,13 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "Chaska",
     url: "https://arb.umn.edu/visit/hours-and-admission",
     sourceLabel: "Minnesota Landscape Arboretum",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["medium", "splurge"],
     vibeTags: ["outdoors", "cozy", "scenic"],
-    timeTags: ["half-day", "full-day"]
+    timeTags: ["half-day", "full-day"],
+    seasonTags: ["any", "sunny", "winter"],
+    priceCaps: ["any", "under-25"]
   },
   {
     id: "north-shore",
@@ -172,9 +211,12 @@ export const MINNESOTA_OUTINGS: OutingItem[] = [
     city: "North Shore",
     url: "https://www.exploreminnesota.com/article/scenic-driving-routes",
     sourceLabel: "Explore Minnesota",
+    kidFriendly: true,
     companyTags: ["solo", "date", "friends", "family"],
     budgetTags: ["cheap", "medium", "splurge"],
     vibeTags: ["scenic", "outdoors"],
-    timeTags: ["full-day"]
+    timeTags: ["full-day"],
+    seasonTags: ["any", "sunny", "winter"],
+    priceCaps: ["any"]
   }
 ];

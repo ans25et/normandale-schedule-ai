@@ -6,11 +6,15 @@ import {
   BUDGET_OPTIONS,
   COMPANY_OPTIONS,
   MINNESOTA_OUTINGS,
+  PRICE_CAP_OPTIONS,
+  SEASON_OPTIONS,
   TIME_OPTIONS,
   VIBE_OPTIONS,
   type BudgetTag,
   type CompanyTag,
   type OutingItem,
+  type PriceCapTag,
+  type SeasonTag,
   type TimeTag,
   type VibeTag
 } from "@/lib/data/minnesota-outings";
@@ -20,17 +24,21 @@ export default function HomePage() {
   const [budget, setBudget] = useState<BudgetTag>("free");
   const [vibe, setVibe] = useState<VibeTag>("scenic");
   const [time, setTime] = useState<TimeTag>("half-day");
+  const [season, setSeason] = useState<SeasonTag>("any");
+  const [priceCap, setPriceCap] = useState<PriceCapTag>("under-25");
+  const [kidFriendlyOnly, setKidFriendlyOnly] = useState(false);
 
   const recommendations = useMemo(() => {
     return [...MINNESOTA_OUTINGS]
       .map((item) => ({
         item,
-        score: scoreItem(item, { company, budget, vibe, time })
+        score: scoreItem(item, { company, budget, vibe, time, season, priceCap, kidFriendlyOnly })
       }))
+      .filter((entry) => entry.score > -100)
       .sort((left, right) => right.score - left.score)
       .slice(0, 4)
       .map((entry) => entry.item);
-  }, [company, budget, vibe, time]);
+  }, [company, budget, vibe, time, season, priceCap, kidFriendlyOnly]);
 
   const topPick = recommendations[0];
 
@@ -60,7 +68,7 @@ export default function HomePage() {
         <section className="panel">
           <div className="panel-inner">
             <h2 className="section-title">Quick Match</h2>
-            <p className="section-copy">Four clicks. One good plan.</p>
+            <p className="section-copy">Fast filters, less overthinking.</p>
 
             <div className="step-list">
               <article className="step-card">
@@ -126,6 +134,51 @@ export default function HomePage() {
                   ))}
                 </div>
               </article>
+
+              <article className="step-card">
+                <h3>Weather or season</h3>
+                <div className="chip-grid">
+                  {SEASON_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={season === option.id ? "chip-btn active" : "chip-btn"}
+                      onClick={() => setSeason(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </article>
+
+              <article className="step-card">
+                <h3>Keep it under</h3>
+                <div className="chip-grid">
+                  {PRICE_CAP_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={priceCap === option.id ? "chip-btn active" : "chip-btn"}
+                      onClick={() => setPriceCap(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </article>
+
+              <article className="step-card">
+                <h3>Extra</h3>
+                <div className="chip-grid">
+                  <button
+                    type="button"
+                    className={kidFriendlyOnly ? "chip-btn active" : "chip-btn"}
+                    onClick={() => setKidFriendlyOnly((current) => !current)}
+                  >
+                    {kidFriendlyOnly ? "Kid-friendly only" : "Include all"}
+                  </button>
+                </div>
+              </article>
             </div>
           </div>
         </section>
@@ -144,6 +197,7 @@ export default function HomePage() {
                   <div className="detail-pill">{labelForType(topPick.type)}</div>
                   <div className="detail-pill">{topPick.city}</div>
                   <div className="detail-pill">{topPick.costLabel}</div>
+                  {topPick.kidFriendly ? <div className="detail-pill">Kid-friendly</div> : null}
                 </div>
                 <p className="helper-copy">{topPick.whyItFits}</p>
                 <p className="muted">{topPick.costHint}</p>
@@ -178,6 +232,7 @@ export default function HomePage() {
                 <div className="detail-stack">
                   <div className="detail-pill">{item.city}</div>
                   <div className="detail-pill">{item.costLabel}</div>
+                  {item.kidFriendly ? <div className="detail-pill">Kid-friendly</div> : null}
                 </div>
                 <p className="muted">{item.costHint}</p>
                 <a className="secondary-btn link-btn" href={item.url} target="_blank" rel="noreferrer">
@@ -214,9 +269,21 @@ export default function HomePage() {
 
 function scoreItem(
   item: OutingItem,
-  filters: { company: CompanyTag; budget: BudgetTag; vibe: VibeTag; time: TimeTag }
+  filters: {
+    company: CompanyTag;
+    budget: BudgetTag;
+    vibe: VibeTag;
+    time: TimeTag;
+    season: SeasonTag;
+    priceCap: PriceCapTag;
+    kidFriendlyOnly: boolean;
+  }
 ): number {
   let score = 0;
+
+  if (filters.kidFriendlyOnly && !item.kidFriendly) {
+    return -999;
+  }
 
   if (item.companyTags.includes(filters.company)) {
     score += 5;
@@ -228,6 +295,12 @@ function scoreItem(
     score += 3;
   }
   if (item.timeTags.includes(filters.time)) {
+    score += 2;
+  }
+  if (filters.season === "any" || item.seasonTags.includes(filters.season)) {
+    score += 2;
+  }
+  if (filters.priceCap === "any" || item.priceCaps.includes(filters.priceCap)) {
     score += 2;
   }
 
