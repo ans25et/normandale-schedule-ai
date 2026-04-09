@@ -3,51 +3,51 @@
 import { useMemo, useState } from "react";
 
 import {
-  ENERGY_OPTIONS,
-  NEED_OPTIONS,
-  NORMANDALE_STUDENT_LIFE_ITEMS,
+  BUDGET_OPTIONS,
+  COMPANY_OPTIONS,
+  MINNESOTA_OUTINGS,
   TIME_OPTIONS,
   VIBE_OPTIONS,
-  type EnergyTag,
-  type NeedTag,
-  type StudentLifeItem,
+  type BudgetTag,
+  type CompanyTag,
+  type OutingItem,
   type TimeTag,
   type VibeTag
-} from "@/lib/data/normandale-student-life";
+} from "@/lib/data/minnesota-outings";
 
 export default function HomePage() {
-  const [need, setNeed] = useState<NeedTag>("study");
-  const [energy, setEnergy] = useState<EnergyTag>("low");
-  const [vibe, setVibe] = useState<VibeTag>("productive");
-  const [time, setTime] = useState<TimeTag>("medium");
+  const [company, setCompany] = useState<CompanyTag>("friends");
+  const [budget, setBudget] = useState<BudgetTag>("free");
+  const [vibe, setVibe] = useState<VibeTag>("scenic");
+  const [time, setTime] = useState<TimeTag>("half-day");
 
   const recommendations = useMemo(() => {
-    return [...NORMANDALE_STUDENT_LIFE_ITEMS]
+    return [...MINNESOTA_OUTINGS]
       .map((item) => ({
         item,
-        score: scoreItem(item, { need, energy, vibe, time })
+        score: scoreItem(item, { company, budget, vibe, time })
       }))
       .sort((left, right) => right.score - left.score)
       .slice(0, 4)
       .map((entry) => entry.item);
-  }, [need, energy, vibe, time]);
+  }, [company, budget, vibe, time]);
 
   const topPick = recommendations[0];
 
   return (
     <main className="page-shell">
       <section className="hero">
-        <span className="eyebrow">Normandale-only · no uploads · real campus links</span>
-        <h1>Normandale Next Move</h1>
+        <span className="eyebrow">Minnesota-only · no uploads · real places</span>
+        <h1>Minnesota Next Move</h1>
         <p>
-          A tiny student-life helper for when you do not know what you need next. Pick your vibe, energy, and time, then get the
-          best Normandale club, support service, or campus move for right now.
+          Find a reason to leave the house. Pick who you are with, what you want to spend, and the kind of vibe you want, then get
+          real Minnesota ideas for solo time, friend hangs, dates, or family plans.
         </p>
         <div className="note-strip">
-          <span>No PDFs</span>
+          <span>Solo or with people</span>
+          <span>Free to paid</span>
           <span>ADHD-friendly</span>
-          <span>Student life</span>
-          <span>Built from Normandale pages</span>
+          <span>Built from official links</span>
         </div>
         <div className="hero-stripe" aria-hidden="true">
           <span />
@@ -60,18 +60,18 @@ export default function HomePage() {
         <section className="panel">
           <div className="panel-inner">
             <h2 className="section-title">Quick Match</h2>
-            <p className="section-copy">Four clicks. One better next step.</p>
+            <p className="section-copy">Four clicks. One good plan.</p>
 
             <div className="step-list">
               <article className="step-card">
-                <h3>What do you need most?</h3>
+                <h3>Who is this for?</h3>
                 <div className="chip-grid">
-                  {NEED_OPTIONS.map((option) => (
+                  {COMPANY_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
-                      className={need === option.id ? "chip-btn active" : "chip-btn"}
-                      onClick={() => setNeed(option.id)}
+                      className={company === option.id ? "chip-btn active" : "chip-btn"}
+                      onClick={() => setCompany(option.id)}
                     >
                       {option.label}
                     </button>
@@ -80,14 +80,14 @@ export default function HomePage() {
               </article>
 
               <article className="step-card">
-                <h3>Energy level</h3>
+                <h3>Budget</h3>
                 <div className="chip-grid">
-                  {ENERGY_OPTIONS.map((option) => (
+                  {BUDGET_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
-                      className={energy === option.id ? "chip-btn active" : "chip-btn"}
-                      onClick={() => setEnergy(option.id)}
+                      className={budget === option.id ? "chip-btn active" : "chip-btn"}
+                      onClick={() => setBudget(option.id)}
                     >
                       {option.label}
                     </button>
@@ -96,7 +96,7 @@ export default function HomePage() {
               </article>
 
               <article className="step-card">
-                <h3>What kind of vibe feels right?</h3>
+                <h3>What kind of vibe do you want?</h3>
                 <div className="chip-grid">
                   {VIBE_OPTIONS.map((option) => (
                     <button
@@ -133,7 +133,7 @@ export default function HomePage() {
         <aside className="panel">
           <div className="panel-inner">
             <h2 className="section-title">Best Next Move</h2>
-            <p className="section-copy">Based on what you picked right now.</p>
+            <p className="section-copy">Based on what sounds good right now.</p>
 
             {topPick ? (
               <article className="schedule-card spotlight-card">
@@ -142,10 +142,11 @@ export default function HomePage() {
                 <p>{topPick.blurb}</p>
                 <div className="detail-stack">
                   <div className="detail-pill">{labelForType(topPick.type)}</div>
-                  {topPick.location ? <div className="detail-pill">{topPick.location}</div> : null}
+                  <div className="detail-pill">{topPick.city}</div>
+                  <div className="detail-pill">{topPick.costLabel}</div>
                 </div>
-                <p className="helper-copy">{topPick.whyItHelps}</p>
-                {topPick.contact ? <p className="muted">{topPick.contact}</p> : null}
+                <p className="helper-copy">{topPick.whyItFits}</p>
+                <p className="muted">{topPick.costHint}</p>
                 <a className="primary-btn link-btn" href={topPick.url} target="_blank" rel="noreferrer">
                   Open official page
                 </a>
@@ -173,12 +174,12 @@ export default function HomePage() {
                   </span>
                 </div>
                 <p>{item.blurb}</p>
-                <p className="helper-copy">{item.whyItHelps}</p>
+                <p className="helper-copy">{item.whyItFits}</p>
                 <div className="detail-stack">
-                  {item.location ? <div className="detail-pill">{item.location}</div> : null}
-                  <div className="detail-pill">{item.sourceLabel}</div>
+                  <div className="detail-pill">{item.city}</div>
+                  <div className="detail-pill">{item.costLabel}</div>
                 </div>
-                {item.contact ? <p className="muted">{item.contact}</p> : null}
+                <p className="muted">{item.costHint}</p>
                 <a className="secondary-btn link-btn" href={item.url} target="_blank" rel="noreferrer">
                   Open
                 </a>
@@ -190,19 +191,19 @@ export default function HomePage() {
 
       <section className="panel panel-spaced">
         <div className="panel-inner">
-          <h2 className="section-title">Why This Is Easier</h2>
+          <h2 className="section-title">Why This Is Better</h2>
           <div className="mini-grid">
             <article className="step-card">
-              <h3>No uploads</h3>
-              <p>No transcript, no schedule PDF, no parser errors.</p>
+              <h3>No homework setup</h3>
+              <p>No account, no transcript, no schedule parser, no annoying form.</p>
             </article>
             <article className="step-card">
-              <h3>Normandale-only</h3>
-              <p>Every recommendation points to a real Normandale page or campus resource.</p>
+              <h3>Actually gets you out</h3>
+              <p>It is built around real places you can go, not fake productivity guilt.</p>
             </article>
             <article className="step-card">
-              <h3>Still useful</h3>
-              <p>Students can actually use this between classes, during stress, or when they feel lost.</p>
+              <h3>Free to paid</h3>
+              <p>You can pick something free, cheap, or more like a full plan depending on your budget.</p>
             </article>
           </div>
         </div>
@@ -212,19 +213,19 @@ export default function HomePage() {
 }
 
 function scoreItem(
-  item: StudentLifeItem,
-  filters: { need: NeedTag; energy: EnergyTag; vibe: VibeTag; time: TimeTag }
+  item: OutingItem,
+  filters: { company: CompanyTag; budget: BudgetTag; vibe: VibeTag; time: TimeTag }
 ): number {
   let score = 0;
 
-  if (item.needTags.includes(filters.need)) {
+  if (item.companyTags.includes(filters.company)) {
     score += 5;
   }
-  if (item.energyTags.includes(filters.energy)) {
-    score += 2;
+  if (item.budgetTags.includes(filters.budget)) {
+    score += 4;
   }
   if (item.vibeTags.includes(filters.vibe)) {
-    score += 2;
+    score += 3;
   }
   if (item.timeTags.includes(filters.time)) {
     score += 2;
@@ -233,16 +234,18 @@ function scoreItem(
   return score;
 }
 
-function labelForType(type: StudentLifeItem["type"]): string {
+function labelForType(type: OutingItem["type"]): string {
   switch (type) {
-    case "club":
-      return "Club / community";
-    case "space":
-      return "Campus spot";
-    case "program":
-      return "Program";
-    case "resource":
+    case "park":
+      return "Park";
+    case "day-trip":
+      return "Day trip";
+    case "garden":
+      return "Garden / zoo";
+    case "city-spot":
+      return "City spot";
+    case "museum":
     default:
-      return "Support resource";
+      return "Museum / culture";
   }
 }
