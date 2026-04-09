@@ -515,6 +515,44 @@ select {
   text-align: center;
 }
 
+.panel-spaced {
+  margin-top: 20px;
+}
+
+.spotlight-card {
+  background:
+    linear-gradient(160deg, rgba(216, 238, 227, 0.72), rgba(255, 248, 239, 0.98)),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(255, 255, 255, 0.92));
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.detail-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.detail-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.source-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .course-chip {
   padding: 12px;
   border-radius: 18px;
