@@ -1,17 +1,17 @@
 :root {
-  --bg: #f7f3ea;
-  --panel: rgba(255, 252, 247, 0.93);
-  --panel-strong: #fffaf2;
-  --text: #1f241f;
-  --muted: #61685d;
-  --line: rgba(43, 66, 56, 0.14);
-  --accent: #0d5c46;
-  --accent-2: #b7862e;
-  --accent-soft: #d8eee3;
-  --accent-gold-soft: #f6e5bd;
+  --bg: #eef5f7;
+  --panel: rgba(248, 252, 251, 0.93);
+  --panel-strong: #f9fcfb;
+  --text: #152228;
+  --muted: #56646b;
+  --line: rgba(24, 64, 72, 0.14);
+  --accent: #0c5b63;
+  --accent-2: #c6862f;
+  --accent-soft: #d8eef1;
+  --accent-gold-soft: #f6e4c5;
   --warning: #9d5a11;
   --danger: #9a2d20;
-  --shadow: 0 20px 45px rgba(31, 46, 39, 0.1);
+  --shadow: 0 20px 45px rgba(22, 39, 45, 0.1);
 }
 
 * {
@@ -21,9 +21,9 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(13, 92, 70, 0.2), transparent 32%),
-    radial-gradient(circle at top right, rgba(183, 134, 46, 0.18), transparent 30%),
-    linear-gradient(180deg, #fcf8ef 0%, #efe8da 100%);
+    radial-gradient(circle at top left, rgba(12, 91, 99, 0.18), transparent 32%),
+    radial-gradient(circle at top right, rgba(198, 134, 47, 0.16), transparent 30%),
+    linear-gradient(180deg, #f7fbfc 0%, #e7eef0 100%);
 }
 
 body {
@@ -62,9 +62,9 @@ select {
   border: 1px solid var(--line);
   border-radius: 32px;
   background:
-    linear-gradient(135deg, rgba(13, 92, 70, 0.1), transparent 38%),
-    linear-gradient(220deg, rgba(183, 134, 46, 0.12), transparent 32%),
-    linear-gradient(140deg, rgba(255, 250, 243, 0.96), rgba(244, 235, 217, 0.94));
+    linear-gradient(135deg, rgba(12, 91, 99, 0.12), transparent 38%),
+    linear-gradient(220deg, rgba(198, 134, 47, 0.12), transparent 32%),
+    linear-gradient(145deg, rgba(248, 253, 252, 0.98), rgba(233, 242, 244, 0.94));
   box-shadow: var(--shadow);
 }
 
@@ -76,7 +76,18 @@ select {
   width: 220px;
   height: 220px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(183, 134, 46, 0.18), transparent 68%);
+  background: radial-gradient(circle, rgba(198, 134, 47, 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: auto auto -40px -30px;
+  width: 220px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(12, 91, 99, 0.14), transparent 70%);
   pointer-events: none;
 }
 
@@ -93,17 +104,17 @@ select {
 
 .hero-stripe span:nth-child(1) {
   width: 88px;
-  background: linear-gradient(90deg, #0d5c46, #1a7c5f);
+  background: linear-gradient(90deg, #0c5b63, #26808b);
 }
 
 .hero-stripe span:nth-child(2) {
   width: 54px;
-  background: linear-gradient(90deg, #b7862e, #d7ab51);
+  background: linear-gradient(90deg, #c6862f, #ddb05f);
 }
 
 .hero-stripe span:nth-child(3) {
   width: 30px;
-  background: rgba(13, 92, 70, 0.2);
+  background: rgba(12, 91, 99, 0.2);
 }
 
 .eyebrow {
@@ -115,6 +126,30 @@ select {
   color: var(--accent);
   font-size: 0.92rem;
   letter-spacing: 0.03em;
+}
+
+.hero-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-mini-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(216, 238, 241, 0.35));
+}
+
+.hero-mini-card strong {
+  font-size: 0.98rem;
+}
+
+.hero-mini-card span {
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .hero h1 {
@@ -521,8 +556,20 @@ select {
 
 .spotlight-card {
   background:
-    linear-gradient(160deg, rgba(216, 238, 227, 0.72), rgba(255, 248, 239, 0.98)),
+    linear-gradient(160deg, rgba(216, 238, 241, 0.72), rgba(255, 248, 239, 0.98)),
     linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(255, 255, 255, 0.92));
+}
+
+.feature-card {
+  background:
+    linear-gradient(140deg, rgba(12, 91, 99, 0.08), rgba(255, 255, 255, 0.94)),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(255, 255, 255, 0.92));
+}
+
+.event-card {
+  background:
+    linear-gradient(140deg, rgba(198, 134, 47, 0.1), rgba(255, 255, 255, 0.94)),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(255, 255, 255, 0.92));
 }
 
 .results-grid {
@@ -642,7 +689,8 @@ select {
   .toggle-row,
   .mini-grid,
   .actions-stack,
-  .constraint-row {
+  .constraint-row,
+  .hero-mini-grid {
     grid-template-columns: 1fr;
   }
 

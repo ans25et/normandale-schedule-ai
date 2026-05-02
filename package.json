@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sync:programs": "node scripts/sync-normandale-programs.mjs"
   },
   "dependencies": {
     "next": "^15.2.8",

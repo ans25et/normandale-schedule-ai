@@ -1,4 +1,4 @@
-import { getProgramCatalog } from "@/lib/requirements/catalog";
+import { resolveProgramCatalog } from "@/lib/requirements/catalog";
 import { evaluateProgramRequirements } from "@/lib/requirements/engine";
 import type {
   CourseOffering,
@@ -29,10 +29,12 @@ export function generateSchedulePlan(input: {
   selectedMajor?: string;
   parserWarnings?: string[];
 }): PlanResult {
-  const program = getProgramCatalog(input.programId);
+  const program = resolveProgramCatalog(input.programId, input.selectedMajor ?? input.transcript.majors[0]);
+  const autoSwitchedToStructuredProgram =
+    input.programId !== program.id;
   const offeredCourseCodes = new Set(input.offerings.map((offering) => `${offering.subject} ${offering.courseNumber}`));
   const requirementStatuses = evaluateProgramRequirements(program, input.transcript.courses, offeredCourseCodes);
-  const options =
+  const primaryOptions =
     program.requirements.length > 0
       ? buildRequirementDrivenOptions(requirementStatuses, input.offerings, input.transcript.courses, input.constraints)
       : buildGeneralOptions(
@@ -41,6 +43,16 @@ export function generateSchedulePlan(input: {
           input.constraints,
           input.selectedMajor ?? input.transcript.majors[0] ?? "Undecided"
         );
+  const usedFallback =
+    program.requirements.length > 0 && primaryOptions.length === 0;
+  const options = usedFallback
+    ? buildGeneralOptions(
+        input.offerings,
+        input.transcript.courses,
+        input.constraints,
+        input.selectedMajor ?? input.transcript.majors[0] ?? "Undecided"
+      )
+    : primaryOptions;
 
   return {
     id: crypto.randomUUID(),
@@ -63,6 +75,14 @@ export function generateSchedulePlan(input: {
         : [],
     parserWarnings: [
       ...(input.parserWarnings ?? []),
+      ...(autoSwitchedToStructuredProgram
+        ? [`Using the ${program.label} rules automatically because that matches the degree you selected.`]
+        : []),
+      ...(usedFallback
+        ? [
+            `No clean schedule combinations were found from the strict ${program.label} rules, so this result falls back to broader good-fit classes for your selected major.`
+          ]
+        : []),
       ...(program.requirements.length === 0
         ? [
             "This result works for any Normandale major, but it is not a full degree audit. It ranks schedules from your transcript history, your chosen degree, your interests, and the Fall 2026 class list."
@@ -121,11 +141,24 @@ function buildGeneralOptions(
   selectedMajor: string
 ): ScheduleOption[] {
   const bestAttempts = new Map<string, StudentCourseHistory>();
+  const highestCompletedBySubject = new Map<string, number>();
   for (const course of courses) {
     const code = `${course.subject} ${course.courseNumber}`;
     const existing = bestAttempts.get(code);
     if (!existing || compareHistoryPriority(course, existing) > 0) {
       bestAttempts.set(code, course);
+    }
+
+    const level = parseCourseLevel(course.courseNumber);
+    if (level === undefined) {
+      continue;
+    }
+
+    if (course.passed || course.inProgress) {
+      const previousHighest = highestCompletedBySubject.get(course.subject) ?? 0;
+      if (level > previousHighest) {
+        highestCompletedBySubject.set(course.subject, level);
+      }
     }
   }
 
@@ -133,7 +166,10 @@ function buildGeneralOptions(
   for (const offering of offerings) {
     const code = `${offering.subject} ${offering.courseNumber}`;
     const prior = bestAttempts.get(code);
-    if (prior?.passed) {
+    if (prior?.passed || prior?.inProgress) {
+      continue;
+    }
+    if (shouldSkipGeneralOffering(offering, highestCompletedBySubject)) {
       continue;
     }
     const existing = grouped.get(code) ?? [];
@@ -352,6 +388,40 @@ function deriveGeneralImportance(
   }
 
   return "supporting";
+}
+
+function shouldSkipGeneralOffering(
+  offering: CourseOffering,
+  highestCompletedBySubject: Map<string, number>
+): boolean {
+  const level = parseCourseLevel(offering.courseNumber);
+  if (level === undefined) {
+    return false;
+  }
+
+  const highestCompleted = highestCompletedBySubject.get(offering.subject);
+  if (!highestCompleted) {
+    return false;
+  }
+
+  if (level < 1000 && highestCompleted >= 1000) {
+    return true;
+  }
+
+  if (offering.subject === "MATH" && highestCompleted >= 1100 && level < 1100) {
+    return true;
+  }
+
+  if (level + 100 <= highestCompleted) {
+    return true;
+  }
+
+  return false;
+}
+
+function parseCourseLevel(courseNumber: string): number | undefined {
+  const numeric = Number.parseInt(courseNumber.replace(/\D/g, ""), 10);
+  return Number.isFinite(numeric) ? numeric : undefined;
 }
 
 function subjectMatchesInterest(subject: string, interestTags: string[]): boolean {
